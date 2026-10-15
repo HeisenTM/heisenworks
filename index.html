@@ -71,11 +71,9 @@ h2{font:800 clamp(30px,4.4vw,52px)/1 var(--display);letter-spacing:-.045em}
 .filters button:hover{color:var(--text)}
 .filters button[aria-pressed="true"]{background:var(--text);color:var(--ink);border-color:var(--text)}
 
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;grid-auto-flow:dense}
-.tile{position:relative;overflow:hidden;border-radius:18px;background:var(--panel);border:1px solid var(--line);aspect-ratio:4/5;cursor:pointer;isolation:isolate;transition:transform .25s ease,border-color .25s}
+.grid{display:flex;flex-wrap:wrap;gap:18px;transition:opacity .4s}
+.tile{position:relative;overflow:hidden;border-radius:18px;background:var(--panel);border:1px solid var(--line);flex:none;cursor:pointer;isolation:isolate;transition:transform .25s ease,border-color .25s}
 .tile:hover{border-color:var(--accent)}
-.tile.big{grid-column:span 2;grid-row:span 2;aspect-ratio:auto;min-height:300px}
-.tile.wide{grid-column:span 2;aspect-ratio:8/5}
 .tile img,.tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s ease}
 .tile:hover img,.tile:hover video{transform:scale(1.05)}
 .tile .ph{position:absolute;inset:0;display:grid;place-content:center;gap:6px;text-align:center;color:var(--mute);font-size:14px;
@@ -116,9 +114,9 @@ dialog::backdrop{background:rgba(5,6,8,.78);backdrop-filter:blur(8px)}
 .m-head span{color:var(--accent-2);font-size:14px}
 .m-x{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--text);cursor:pointer;font-size:16px}
 .m-x:hover{border-color:var(--accent)}
-.m-body{flex:1;overflow-y:auto;padding:22px;display:grid;gap:18px;align-content:start;overscroll-behavior:contain}
-.m-desc{color:var(--mute);max-width:62ch}
-.m-fig{margin:0 auto;width:fit-content;max-width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--ink)}
+.m-body{flex:1;min-height:0;overflow-y:auto;padding:22px;overscroll-behavior:contain}
+.m-desc{color:var(--mute);max-width:62ch;margin-bottom:18px}
+.m-fig{margin:0 auto 18px;width:fit-content;max-width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--ink)}
 .m-fig img,.m-fig video{display:block;max-width:100%;height:auto}
 .m-fig video{width:100%}
 .m-fig.ph{width:100%;display:grid;place-content:center;text-align:center;aspect-ratio:16/10;color:var(--mute);font-size:14px;cursor:pointer;background:radial-gradient(120% 120% at 20% 0%,color-mix(in srgb,var(--text) 8%,var(--panel)),var(--panel))}
@@ -128,18 +126,6 @@ dialog::backdrop{background:rgba(5,6,8,.78);backdrop-filter:blur(8px)}
 .ic.raw{border:0;background:none;position:relative;overflow:hidden}
 .ic.raw svg,.ic.raw img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .ic.raw img{background:var(--panel)}
-
-/* video slider */
-.videos{padding:0 0 96px}
-.vtrack{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:14px;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-.vcard{flex:0 0 min(680px,86%);scroll-snap-align:start}
-.vbox{aspect-ratio:16/9;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#000}
-.vbox video{display:block;width:100%;height:100%;object-fit:contain}
-.vbox.ph{display:grid;place-content:center;color:var(--mute);font-size:14px;background:radial-gradient(120% 120% at 20% 0%,color-mix(in srgb,var(--text) 8%,var(--panel)),var(--panel))}
-.vcard h3{font:500 15px var(--display);letter-spacing:-.02em;margin-top:12px}
-.vctrl{display:flex;gap:8px}
-.vctrl button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--text);cursor:pointer;font-size:18px;transition:.2s}
-.vctrl button:hover{border-color:var(--accent)}
 
 /* about + skills (compact) */
 .about{border-block:1px solid var(--line);padding:56px 0}
@@ -170,8 +156,6 @@ footer{padding:64px 0 28px}
 @media(max-width:860px){
   .nav ul{gap:16px;font-size:14px}
   .skill-box{border-left:0;padding-left:0}
-  .grid{grid-template-columns:repeat(2,1fr);gap:14px}
-  .tile.big,.tile.wide{grid-column:span 2;grid-row:span 1;aspect-ratio:16/10;min-height:0}
   .about .wrap{grid-template-columns:1fr;gap:28px}
 }
 @media(max-width:520px){
@@ -191,7 +175,6 @@ footer{padding:64px 0 28px}
     <ul>
       <li><a href="#home">Home</a></li>
       <li><a href="#work">Work</a></li>
-      <li><a href="#videos">Videos</a></li>
       <li><a href="#about">About</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
@@ -228,16 +211,6 @@ footer{padding:64px 0 28px}
         <div class="filters" id="filters" role="group" aria-label="Filter work"></div>
       </div>
       <div class="grid" id="grid"></div>
-    </div>
-  </section>
-
-  <section class="videos" id="videos">
-    <div class="wrap">
-      <div class="work-head">
-        <h2>Video edits</h2>
-        <div class="vctrl"><button id="vPrev" aria-label="Previous videos">←</button><button id="vNext" aria-label="Next videos">→</button></div>
-      </div>
-      <div class="vtrack" id="vTrack"></div>
     </div>
   </section>
 
@@ -298,13 +271,14 @@ footer{padding:64px 0 28px}
    Any image size or shape works. Files show in name order (01-, 02-, ...);
    name one file "cover.jpg" to choose the grid cover.
    To add a whole new box: make works/<new-folder>/ and add a line below.
-   size: "" | "big" (2x2, your best piece) | "wide" (2 columns)
+   Each box takes the shape of its cover image: tall posters stay tall, thumbnails stay wide.
+   ratio = width / height, only used while a folder is still empty.
    ============================================================ */
 const FOLDERS = [
-  { folder:'gta6-fan-art',    title:'GTA 6 Fan Art',   cat:'Poster',    size:'big',  desc:'A collection of GTA 6 fan posters: character posters, key art and edits. Scroll down to see them all.' },
-  { folder:'esports-posters', title:'Esports Posters', cat:'Graphic',   size:'wide', desc:'Posters and branding for esports teams and tournaments.' },
-  { folder:'thumbnail-works', title:'Thumbnail Works', cat:'Thumbnail', size:'',     desc:'Thumbnails designed for gaming videos.' },
-  { folder:'concepts',        title:'Concepts',        cat:'Concept',   size:'',     desc:'Experiments, ideas and work in progress.' },
+  { folder:'gta6-fan-art',    title:'GTA 6 Fan Art',   cat:'Poster',    ratio:.8,   desc:'A collection of GTA 6 fan posters: character posters, key art and edits. Scroll down to see them all.' },
+  { folder:'esports-posters', title:'Esports Posters', cat:'Graphic',   ratio:1.6,  desc:'Posters and branding for esports teams and tournaments.' },
+  { folder:'thumbnail-works', title:'Thumbnail Works', cat:'Thumbnail', ratio:1.78, desc:'Thumbnails designed for gaming videos.' },
+  { folder:'concepts',        title:'Concepts',        cat:'Concept',   ratio:1.78, desc:'Experiments, ideas and work in progress.' },
 ];
 const M = window.WORKS_MANIFEST || {};          // written by update-works.py
 const VIDEO = /\.(mp4|webm|mov|m4v)$/i;
@@ -321,10 +295,54 @@ const grid = document.getElementById('grid'), filters = document.getElementById(
 const isVid = s => VIDEO.test(s);
 const fine = matchMedia('(hover:hover) and (pointer:fine)').matches && !matchMedia('(prefers-reduced-motion:reduce)').matches;
 
+/* layout: boxes keep their cover's shape and are packed into full-width rows */
+function pack() {
+  const tiles = [...grid.querySelectorAll('.tile:not(.hide)')];
+  const W = grid.clientWidth; if (!W || !tiles.length) return;
+  const gap = W < 700 ? 14 : 18, target = W < 640 ? 0 : Math.min(440, W * .4);
+  grid.style.gap = gap + 'px';
+  let row = [], sum = 0;
+  const flush = full => {
+    if (!row.length) return;
+    let h = (W - gap * (row.length - 1)) / sum;
+    if (!full && target) h = Math.min(h, target);      // last row stays at normal height
+    row.forEach(t => { t.style.width = h * t.r + 'px'; t.style.height = h + 'px'; });
+    row = []; sum = 0;
+  };
+  tiles.forEach(t => {
+    if (target && row.length) {
+      const s1 = sum + t.r, n1 = row.length + 1;
+      if (s1 * target + gap * (n1 - 1) >= W) {
+        const h1 = (W - gap * (n1 - 1)) / s1, h0 = (W - gap * (n1 - 2)) / sum;
+        if (Math.abs(h1 - target) <= Math.abs(h0 - target)) { row.push(t); sum = s1; flush(true); return; }
+        flush(true);
+      }
+    }
+    row.push(t); sum += t.r;
+    if (!target) flush(true);
+  });
+  flush(false);
+}
+function probe(w, el) {                                // read the cover's real shape
+  return new Promise(done => {
+    if (!w.src) return done();
+    if (isVid(w.src)) {
+      const v = document.createElement('video'); v.preload = 'metadata';
+      v.onloadedmetadata = () => { if (v.videoWidth) el.r = v.videoWidth / v.videoHeight; done(); };
+      v.onerror = () => done(); v.src = w.src;
+    } else {
+      const im = new Image();
+      im.onload = () => { if (im.naturalWidth) el.r = im.naturalWidth / im.naturalHeight; done(); };
+      im.onerror = () => done(); im.src = w.src;
+    }
+  });
+}
+const probes = [];
+
 WORKS.forEach((w, i) => {
   const el = document.createElement('article');
   el.className = 'tile ' + (w.size || '');
-  el.dataset.cat = w.cat; el.tabIndex = 0;
+  el.dataset.cat = w.cat; el.tabIndex = 0; el.r = w.ratio || .8;
   el.setAttribute('role','button'); el.setAttribute('aria-label','Open ' + w.title);
   el.innerHTML =
     (!w.src ? `<div class="ph"><b>+</b><span>Cover goes here</span></div>`
@@ -341,6 +359,7 @@ WORKS.forEach((w, i) => {
   };
   el.onclick = () => openWork(i);
   el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openWork(i); } };
+  probes.push(probe(w, el));
   grid.appendChild(el);
 });
 
@@ -350,10 +369,14 @@ WORKS.forEach((w, i) => {
   b.onclick = () => {
     filters.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
     grid.querySelectorAll('.tile').forEach(t => t.classList.toggle('hide', c !== 'All' && t.dataset.cat !== c));
+    pack();
   };
   filters.appendChild(b);
 });
 if (WORKS.length < 5) filters.style.display = 'none';   // filters only appear once there are enough boxes
+grid.style.opacity = 0;
+Promise.race([Promise.all(probes), new Promise(x => setTimeout(x, 1500))]).then(() => { pack(); grid.style.opacity = 1; });
+new ResizeObserver(pack).observe(grid);
 
 /* popup: opens on the same page, scroll inside to see every piece */
 const dlg = document.getElementById('modal'), mBody = document.getElementById('mBody');
@@ -377,21 +400,6 @@ document.getElementById('mNext').onclick = () => openWork(cur + 1);
 dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 dlg.addEventListener('close', () => document.documentElement.style.overflow = '');
 addEventListener('keydown', e => { if (!dlg.open) return; if (e.key === 'ArrowRight') openWork(cur + 1); if (e.key === 'ArrowLeft') openWork(cur - 1); });
-
-/* video slider: native player, one video plays at a time */
-const vTrack = document.getElementById('vTrack');
-const pretty = n => n.replace(/\.[^.]+$/, '').replace(/^\d+[-_ ]+/, '').replace(/[-_]+/g, ' ').trim();
-const vids = M['video-edits'] || [];
-vTrack.innerHTML = vids.length
-  ? vids.map(v => {
-      const f = typeof v === 'string' ? v : v.file, p = v.poster;
-      return `<article class="vcard"><div class="vbox"><video src="${url('video-edits', f)}#t=0.1" ${p ? `poster="${url('video-edits', p)}"` : ''} controls playsinline preload="metadata"></video></div><h3>${pretty(f)}</h3></article>`;
-    }).join('')
-  : [1,2,3].map(() => `<article class="vcard"><div class="vbox ph"><span>Coming soon</span></div></article>`).join('');
-vTrack.addEventListener('play', e => vTrack.querySelectorAll('video').forEach(v => { if (v !== e.target) v.pause(); }), true);
-const vStep = () => vTrack.querySelector('.vcard').getBoundingClientRect().width + 18;
-document.getElementById('vPrev').onclick = () => vTrack.scrollBy({ left: -vStep(), behavior: 'smooth' });
-document.getElementById('vNext').onclick = () => vTrack.scrollBy({ left:  vStep(), behavior: 'smooth' });
 
 /* ticker */
 const words = ['Game posters','Fan art','Thumbnails','Esports branding','Social graphics','Logos'];
@@ -438,7 +446,7 @@ if(!matchMedia('(prefers-reduced-motion:reduce)').matches)(function idle(t){
 })(0);
 
 /* nav: highlight the section in view */
-const secs=['home','work','videos','about','contact'].map(id=>document.getElementById(id));
+const secs=['home','work','about','contact'].map(id=>document.getElementById(id));
 const navLinks=[...document.querySelectorAll('.nav ul a')];
 const bar=document.getElementById('bar');
 function spy(){
