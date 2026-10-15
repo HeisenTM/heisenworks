@@ -31,5 +31,10 @@ window.WORKS_MANIFEST = {
   "ocean_thumbnailtwo.jpg",
   "rageengine_thumbnail.jpg",
   "rockstargames_gridart.jpg"
+ ],
+ "video-edits": [
+  {
+   "file": "shes_on_fire.mp4"
+  }
  ]
 };
