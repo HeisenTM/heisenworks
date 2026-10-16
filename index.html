@@ -145,7 +145,23 @@ dialog::backdrop{background:rgba(5,6,8,.78);backdrop-filter:blur(8px)}
 .ic.raw svg,.ic.raw img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .ic.raw img{background:var(--panel)}
 
+/* ko-fi button */
+.kofi{position:relative;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:99px;padding:7px 14px 7px 11px;font-size:14px;font-weight:600;color:var(--text);transition:background .25s,border-color .25s,color .25s,transform .25s}
+.kofi svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;color:var(--accent);transition:transform .35s,color .25s}
+.kofi:hover{background:var(--accent);border-color:var(--accent);color:var(--ink);transform:translateY(-1px)}
+.kofi:hover svg{color:var(--ink);transform:rotate(-12deg) scale(1.1)}
+.kofi .steam{transform-box:fill-box;animation:steam 2.6s ease-in-out infinite}
+.kofi .s2{animation-delay:.5s}.kofi .s3{animation-delay:1s}
+@keyframes steam{0%{opacity:0;transform:translateY(2px)}50%{opacity:1}100%{opacity:0;transform:translateY(-3px)}}
+.kofi::after{content:"♥";position:absolute;top:-2px;right:14px;font-size:12px;color:#ff5e5b;opacity:0;transform:translateY(4px);transition:.3s;pointer-events:none}
+.kofi:hover::after{opacity:1;transform:translateY(-9px)}
+@media(max-width:700px){.kofi span{display:none}.kofi{padding:8px 9px}}
+
 /* contact menu */
+.crow{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.kofi.big{padding:14px 24px 14px 20px;font-size:16px}
+.kofi.big svg{width:22px;height:22px}
+@media(max-width:700px){.kofi.big span{display:inline}.kofi.big{padding:14px 24px 14px 20px}}
 .csub{color:var(--mute);margin:18px 0 26px;max-width:46ch}
 .cbtn{display:inline-flex;align-items:center;gap:12px;background:var(--text);color:var(--ink);border:0;border-radius:99px;padding:15px 26px;font:600 16px var(--body);cursor:pointer;transition:background .25s}
 .cbtn:hover{background:var(--accent)}
@@ -220,6 +236,10 @@ footer{padding:64px 0 28px}
       <li><a href="#contact">Contact</a></li>
     </ul>
     <div class="nav-r">
+      <a class="kofi" href="https://ko-fi.com/heisentm" target="_blank" rel="noopener" aria-label="Support me on Ko-fi">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="steam s1" d="M8 2.2c-1 1.2 1 2.1 0 3.3"/><path class="steam s2" d="M11.5 1.8c-1 1.2 1 2.1 0 3.3"/><path class="steam s3" d="M15 2.2c-1 1.2 1 2.1 0 3.3"/><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"/><path d="M17 10.5h1.4a2.6 2.6 0 0 1 0 5.2H17"/></svg>
+        <span>Support me</span>
+      </a>
       <button id="theme" aria-label="Toggle light and dark theme">◐</button>
     </div>
   </div>
@@ -284,7 +304,10 @@ footer{padding:64px 0 28px}
   <div class="wrap">
     <h2 class="cta">Let's make something.</h2>
     <p class="csub">Have a poster, thumbnail or branding project in mind? Tell me about it.</p>
-    <button class="cbtn" id="cBtn" aria-expanded="false" aria-controls="cPanel">Contact me <span class="arr" aria-hidden="true">+</span></button>
+    <div class="crow">
+      <button class="cbtn" id="cBtn" aria-expanded="false" aria-controls="cPanel">Contact me <span class="arr" aria-hidden="true">+</span></button>
+      <a class="kofi big" href="https://ko-fi.com/heisentm" target="_blank" rel="noopener" aria-label="Support me on Ko-fi"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="steam s1" d="M8 2.2c-1 1.2 1 2.1 0 3.3"/><path class="steam s2" d="M11.5 1.8c-1 1.2 1 2.1 0 3.3"/><path class="steam s3" d="M15 2.2c-1 1.2 1 2.1 0 3.3"/><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"/><path d="M17 10.5h1.4a2.6 2.6 0 0 1 0 5.2H17"/></svg><span>Support me</span></a>
+    </div>
     <div class="cwrap" id="cWrap">
       <div class="cinner" id="cPanel">
         <div class="copts">
@@ -306,7 +329,7 @@ footer{padding:64px 0 28px}
     <div class="foot">
       <div>spmesh2025@gmail.com · Discord: heisentm</div>
       <nav>
-        <a href="https://www.behance.net/nepgfx" target="_blank" rel="noopener">Behance</a><a href="https://x.com/HeisenTM" target="_blank" rel="noopener">X</a>
+        <a href="https://www.behance.net/nepgfx" target="_blank" rel="noopener">Behance</a><a href="https://x.com/HeisenTM" target="_blank" rel="noopener">X</a><a href="https://ko-fi.com/heisentm" target="_blank" rel="noopener">Ko-fi</a>
       </nav>
       <div>© <span id="yr"></span> heisentm</div>
     </div>
