@@ -27,7 +27,6 @@ window.WORKS_MANIFEST = {
  ],
  "thumbnail-works": [
   "cover.jpg.jpg",
-  "ocean_thumbnail.jpg",
   "ocean_thumbnailtwo.jpg",
   "rageengine_thumbnail.jpg",
   "rockstargames_gridart.jpg"
