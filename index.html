@@ -73,6 +73,7 @@ h2{font:800 clamp(30px,4.4vw,52px)/1 var(--display);letter-spacing:-.045em}
 
 .grid{display:flex;flex-direction:column;gap:18px;transition:opacity .4s}
 .grow{display:flex;justify-content:center}
+.gcol{display:flex;flex-direction:column}
 .tile{position:relative;overflow:hidden;border-radius:18px;background:var(--panel);border:1px solid var(--line);flex:none;cursor:pointer;isolation:isolate;transition:transform .25s ease,border-color .25s}
 .tile:hover{border-color:var(--accent)}
 .tile img,.tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s ease}
@@ -330,7 +331,7 @@ footer{padding:64px 0 28px}
 <script>
 /* ============================================================
    HOW TO ADD WORK: drop files into the folders inside /works. No code needed.
-     works/gta6-fan-art/   works/esports-posters/   works/thumbnail-works/   works/concepts/   works/video-edits/
+     works/gta6-fan-art/   works/thumbnail-works/   works/concepts/
    Any image size or shape works. Files show in name order (01-, 02-, ...);
    name one file "cover.jpg" to choose the grid cover.
    To add a whole new box: make works/<new-folder>/ and add a line below.
@@ -339,7 +340,6 @@ footer{padding:64px 0 28px}
    ============================================================ */
 const FOLDERS = [
   { folder:'gta6-fan-art',    title:'GTA 6 Fan Art',   cat:'Poster',    ratio:.8,   desc:'A collection of GTA 6 fan posters: character posters, key art and edits. Scroll down to see them all.' },
-  { folder:'esports-posters', title:'Esports Posters', cat:'Graphic',   ratio:1.6,  desc:'Posters and branding for esports teams and tournaments.' },
   { folder:'thumbnail-works', title:'Thumbnail Works', cat:'Thumbnail', ratio:1.78, desc:'Thumbnails designed for gaming videos.' },
   { folder:'concepts',        title:'Concepts',        cat:'Concept',   ratio:1.78, desc:'Experiments, ideas and work in progress.' },
 ];
@@ -374,6 +374,18 @@ function pack() {
     row.forEach(t => { t.style.width = Math.floor(h * t.r) + 'px'; t.style.height = Math.round(h) + 'px'; el.appendChild(t); });
     grid.appendChild(el);
   };
+  const pos = tiles.filter(t => t.r < 1.15), land = tiles.filter(t => t.r >= 1.15);
+  if (!small && W >= 900 && pos.length >= 1 && pos.length <= 2 && land.length >= 1 && land.length <= 2) {
+    const S = land.reduce((a, t) => a + 1 / t.r, 0);                         // posters left, wide images stacked on the right
+    const H = (W - pos.length * gap + (land.length - 1) * gap / S) / (pos.reduce((a, t) => a + t.r, 0) + 1 / S);
+    const Wl = (H - (land.length - 1) * gap) / S;
+    const row = document.createElement('div'); row.className = 'grow'; row.style.gap = gap + 'px';
+    const col = document.createElement('div'); col.className = 'gcol'; col.style.gap = gap + 'px';
+    pos.forEach(t => { t.style.width = Math.floor(H * t.r) + 'px'; t.style.height = Math.round(H) + 'px'; row.appendChild(t); });
+    land.forEach(t => { t.style.width = Math.floor(Wl) + 'px'; t.style.height = Math.round(Wl / t.r) + 'px'; col.appendChild(t); });
+    if (tiles[0].r >= 1.15) row.prepend(col); else row.appendChild(col);
+    grid.appendChild(row); return;
+  }
   const runs = [];                                              // posters/squares and wide images never share a row
   tiles.forEach(t => {
     const ty = t.r < 1.15 ? 'p' : 'l', last = runs[runs.length - 1];
