@@ -163,17 +163,23 @@ dialog::backdrop{background:rgba(5,6,8,.78);backdrop-filter:blur(8px)}
 .kofi:hover::after{opacity:1;transform:translateY(-9px)}
 @media(max-width:700px){.kofi span{display:none}.kofi{padding:8px 9px}}
 
-/* popup zoom */
-.mzoom{display:flex;align-items:center;gap:6px;margin-left:auto;margin-right:10px}
+/* popup viewer (zoom + pan one poster at a time) */
+[hidden]{display:none!important}
+.mback{margin-left:auto}
+.mzoom{display:flex;align-items:center;gap:6px;margin:0 10px 0 12px}
 .mzoom button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--text);cursor:pointer;font-size:17px;line-height:1;transition:border-color .2s}
 .mzoom button:hover:not(:disabled){border-color:var(--accent)}
 .mzoom button:disabled{opacity:.35;cursor:default}
-.mzoom span{min-width:46px;text-align:center;font-size:13px;color:var(--mute)}
-.m-fig img{-webkit-user-drag:none}
-.m-body.zoomed{overflow:auto;scroll-snap-type:none;cursor:grab}
-.m-body.zoomed .m-fig{width:calc(var(--z,1) * 100%);max-width:none;margin:0 0 18px}
-.m-body.zoomed .m-fig img{width:100%;max-width:none;max-height:none}
-.m-body.panning{cursor:grabbing;user-select:none}
+.mzoom #zLvl{width:auto;min-width:56px;padding:0 12px;border-radius:99px;font-size:13px}
+.m-fig img{cursor:zoom-in;-webkit-user-drag:none}
+.mview{flex:1;min-height:0;position:relative;overflow:hidden;background:color-mix(in srgb,var(--ink) 82%,#000);cursor:grab;touch-action:none;user-select:none}
+.mview.fit{cursor:zoom-in}
+.mview.drag{cursor:grabbing}
+.mview img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;will-change:transform;pointer-events:none;-webkit-user-drag:none;transition:opacity .2s}
+.mview img.anim{transition:transform .22s ease,opacity .2s}
+dialog.viewing{height:92vh}
+.mhint{color:var(--mute);font-size:13px;text-align:center}
+@media(max-width:700px){.mhint{display:none}}
 
 /* colour mood button */
 #pal{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:none;cursor:pointer;display:grid;place-items:center;transition:border-color .25s,transform .45s}
@@ -369,17 +375,20 @@ footer{padding:64px 0 28px}
 <dialog id="modal" aria-labelledby="mTitle">
   <div class="m-head">
     <div><h3 id="mTitle"></h3><span id="mCat"></span></div>
-    <div class="mzoom" aria-label="Zoom">
+    <button type="button" class="pill mback" id="mBack" hidden>← All posters</button>
+    <div class="mzoom" id="mZoom" aria-label="Zoom" hidden>
       <button type="button" id="zOut" aria-label="Zoom out">−</button>
-      <span id="zLvl">Fit</span>
+      <button type="button" id="zLvl" aria-label="Fit to screen">Fit</button>
       <button type="button" id="zIn" aria-label="Zoom in">+</button>
     </div>
     <button class="m-x" id="mClose" aria-label="Close">✕</button>
   </div>
   <div class="m-body" id="mBody"></div>
+  <div class="mview" id="mView" hidden><img id="vImg" alt="" draggable="false"></div>
   <div class="m-foot">
     <button class="pill" id="mPrev">Previous</button>
     <a class="pill" id="mLink" target="_blank" rel="noopener" hidden>View project</a>
+    <span class="mhint" id="mHint">Click a poster to zoom in</span>
     <button class="pill" id="mNext">Next</button>
   </div>
 </dialog>
@@ -531,49 +540,139 @@ new ResizeObserver(() => { if (grid.clientWidth !== lastW) pack(); }).observe(gr
 const dlg = document.getElementById('modal'), mBody = document.getElementById('mBody');
 let cur = 0;
 function openWork(i) {
+  leaveView(false);
   cur = (i + WORKS.length) % WORKS.length;
   const w = WORKS[cur], items = [w.src, ...(w.gallery || [])].filter(Boolean);
+  curImgs = items.filter(s => !isVid(s));
   document.getElementById('mTitle').textContent = w.title;
   document.getElementById('mCat').textContent = w.cat;
   mBody.innerHTML = (w.desc ? `<p class="m-desc">${w.desc}</p>` : '') +
     (items.length
       ? items.map(s => `<figure class="m-fig">${isVid(s) ? `<video src="${s}" controls playsinline></video>` : `<img src="${s}" alt="${w.title}" loading="lazy">`}</figure>`).join('')
       : `<div class="m-fig ph"><span>Coming soon</span></div>`);
-  setZoom(0);
   mBody.scrollTop = 0;
   const l = document.getElementById('mLink'); l.hidden = !w.link; l.href = w.link || '#';
   if (!dlg.open) { dlg.showModal(); document.documentElement.style.overflow = 'hidden'; }
 }
 document.getElementById('mClose').onclick = () => dlg.close();
-document.getElementById('mPrev').onclick = () => openWork(cur - 1);
-document.getElementById('mNext').onclick = () => openWork(cur + 1);
+document.getElementById('mPrev').onclick = () => viewing ? stepView(-1) : openWork(cur - 1);
+document.getElementById('mNext').onclick = () => viewing ? stepView(1) : openWork(cur + 1);
 dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 dlg.addEventListener('close', () => document.documentElement.style.overflow = '');
 
-/* popup zoom: buttons in the header, double-click an image, + / - / 0 keys, drag to pan */
-const ZOOMS = [1, 1.5, 2, 3]; let zi = 0;
-function setZoom(i) {
-  zi = Math.max(0, Math.min(ZOOMS.length - 1, i)); const z = ZOOMS[zi];
-  mBody.style.setProperty('--z', z); mBody.classList.toggle('zoomed', z > 1);
-  document.getElementById('zLvl').textContent = z === 1 ? 'Fit' : Math.round(z * 100) + '%';
-  document.getElementById('zOut').disabled = zi === 0; document.getElementById('zIn').disabled = zi === ZOOMS.length - 1;
+/* poster viewer: click a poster to open it, scroll / pinch / + - to zoom, drag to move */
+let viewing = false, curImgs = [], animT;
+const V = { s: 1, fit: 1, tx: 0, ty: 0, w: 1, h: 1, vw: 1, vh: 1, idx: 0 };
+const mView = document.getElementById('mView'), vImg = document.getElementById('vImg');
+const zIn = document.getElementById('zIn'), zOut = document.getElementById('zOut'), zLvl = document.getElementById('zLvl');
+const mHint = document.getElementById('mHint'), LIST_HINT = 'Click a poster to zoom in';
+
+function clampView() {
+  const iw = V.w * V.s, ih = V.h * V.s;
+  V.tx = iw <= V.vw ? (V.vw - iw) / 2 : Math.min(0, Math.max(V.vw - iw, V.tx));
+  V.ty = ih <= V.vh ? (V.vh - ih) / 2 : Math.min(0, Math.max(V.vh - ih, V.ty));
 }
-document.getElementById('zIn').onclick = () => setZoom(zi + 1);
-document.getElementById('zOut').onclick = () => setZoom(zi - 1);
-mBody.addEventListener('dblclick', e => { if (e.target.closest('img')) setZoom(zi ? 0 : 2); });
+function paint(anim) {
+  clampView();
+  if (anim) { vImg.classList.add('anim'); clearTimeout(animT); animT = setTimeout(() => vImg.classList.remove('anim'), 260); }
+  vImg.style.transform = `translate(${V.tx}px,${V.ty}px) scale(${V.s})`;
+  const z = V.s / V.fit, atFit = z < 1.01;
+  zLvl.textContent = atFit ? 'Fit' : Math.round(z * 100) + '%';
+  zOut.disabled = atFit; zIn.disabled = z >= 7.99;
+  mView.classList.toggle('fit', atFit);
+}
+function layoutView(reset) {
+  const r = mView.getBoundingClientRect(); V.vw = r.width; V.vh = r.height;
+  const nf = Math.max(.01, Math.min((V.vw - 32) / V.w, (V.vh - 32) / V.h, 1.5));
+  const ratio = reset ? 1 : V.s / V.fit;
+  V.fit = nf; V.s = nf * ratio;
+  if (reset) { V.tx = (V.vw - V.w * V.s) / 2; V.ty = (V.vh - V.h * V.s) / 2; }
+  paint();
+}
+function zoomAt(px, py, ns, anim) {
+  ns = Math.max(V.fit, Math.min(V.fit * 8, ns));
+  const k = ns / V.s; V.tx = px - (px - V.tx) * k; V.ty = py - (py - V.ty) * k; V.s = ns; paint(anim);
+}
+const zoomCenter = f => zoomAt(V.vw / 2, V.vh / 2, V.s * f, true);
+function loadView() {
+  vImg.style.opacity = 0;
+  vImg.onload = () => { V.w = vImg.naturalWidth; V.h = vImg.naturalHeight; vImg.style.width = V.w + 'px'; vImg.style.height = V.h + 'px'; layoutView(true); vImg.style.opacity = 1; };
+  vImg.src = curImgs[V.idx];
+  if (vImg.complete && vImg.naturalWidth) vImg.onload();
+}
+function enterView(i) {
+  if (!curImgs.length) return;
+  viewing = true; V.idx = i;
+  mBody.hidden = true; mView.hidden = false; dlg.classList.add('viewing');
+  document.getElementById('mZoom').hidden = false; document.getElementById('mBack').hidden = false;
+  document.getElementById('mLink').hidden = true;
+  mHint.textContent = 'Scroll to zoom · drag to move';
+  document.getElementById('mCat').textContent = (i + 1) + ' / ' + curImgs.length;
+  loadView();
+}
+function stepView(d) {
+  V.idx = (V.idx + d + curImgs.length) % curImgs.length;
+  document.getElementById('mCat').textContent = (V.idx + 1) + ' / ' + curImgs.length;
+  loadView();
+}
+function leaveView(restore) {
+  if (!viewing) return;
+  viewing = false; mView.hidden = true; mBody.hidden = false; dlg.classList.remove('viewing');
+  document.getElementById('mZoom').hidden = true; document.getElementById('mBack').hidden = true;
+  const w = WORKS[cur]; document.getElementById('mLink').hidden = !w.link;
+  document.getElementById('mCat').textContent = w.cat; mHint.textContent = LIST_HINT;
+  if (restore) { const el = mBody.querySelectorAll('.m-fig img')[V.idx]; if (el) el.scrollIntoView({ block: 'center' }); }
+}
+mBody.addEventListener('click', e => {
+  const img = e.target.closest('.m-fig img'); if (!img) return;
+  const i = curImgs.indexOf(img.getAttribute('src')); if (i >= 0) enterView(i);
+});
+document.getElementById('mBack').onclick = () => leaveView(true);
+zIn.onclick = () => zoomCenter(1.5); zOut.onclick = () => zoomCenter(1 / 1.5);
+zLvl.onclick = () => zoomAt(V.vw / 2, V.vh / 2, V.fit, true);
+mView.addEventListener('wheel', e => {
+  e.preventDefault(); const r = mView.getBoundingClientRect();
+  zoomAt(e.clientX - r.left, e.clientY - r.top, V.s * Math.exp(-e.deltaY * (e.ctrlKey ? .01 : .0018)));
+}, { passive: false });
+const ptrs = new Map(); let drag0 = null, moved = 0, pinch0 = null;
+mView.addEventListener('pointerdown', e => {
+  mView.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved = 0;
+  if (ptrs.size === 1) { drag0 = { x: e.clientX, y: e.clientY, tx: V.tx, ty: V.ty }; mView.classList.add('drag'); }
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, s: V.s }; }
+});
+mView.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const r = mView.getBoundingClientRect();
+  if (ptrs.size === 2 && pinch0) {
+    const [a, b] = [...ptrs.values()];
+    zoomAt((a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top, pinch0.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch0.d); moved = 99; return;
+  }
+  if (ptrs.size === 1 && drag0) {
+    const dx = e.clientX - drag0.x, dy = e.clientY - drag0.y; moved = Math.max(moved, Math.hypot(dx, dy));
+    V.tx = drag0.tx + dx; V.ty = drag0.ty + dy; paint();
+  }
+});
+const endPointer = e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const tap = ptrs.size === 1 && moved < 5 && e.type === 'pointerup';
+  ptrs.delete(e.pointerId);
+  if (ptrs.size === 0) {
+    mView.classList.remove('drag'); drag0 = null; pinch0 = null;
+    if (tap && V.s <= V.fit * 1.01) { const r = mView.getBoundingClientRect(); zoomAt(e.clientX - r.left, e.clientY - r.top, V.fit * 2.5, true); }
+  } else if (ptrs.size === 1) { const q = [...ptrs.values()][0]; drag0 = { x: q.x, y: q.y, tx: V.tx, ty: V.ty }; pinch0 = null; }
+};
+['pointerup', 'pointercancel'].forEach(t => mView.addEventListener(t, endPointer));
+mView.addEventListener('dblclick', () => { if (V.s > V.fit * 1.01) zoomAt(V.vw / 2, V.vh / 2, V.fit, true); });
 addEventListener('keydown', e => {
-  if (!dlg.open) return;
-  if (e.key === '+' || e.key === '=') setZoom(zi + 1); else if (e.key === '-') setZoom(zi - 1); else if (e.key === '0') setZoom(0);
+  if (!dlg.open || !viewing) return;
+  if (e.key === '+' || e.key === '=') zoomCenter(1.5); else if (e.key === '-') zoomCenter(1 / 1.5); else if (e.key === '0') zoomAt(V.vw / 2, V.vh / 2, V.fit, true);
+  else if (e.key === 'ArrowRight') stepView(1); else if (e.key === 'ArrowLeft') stepView(-1);
 });
-let pan = null;
-mBody.addEventListener('pointerdown', e => {
-  if (zi === 0 || e.button !== 0 || e.target.closest('video')) return;
-  pan = { x: e.clientX, y: e.clientY, l: mBody.scrollLeft, t: mBody.scrollTop };
-  mBody.setPointerCapture(e.pointerId); mBody.classList.add('panning');
-});
-mBody.addEventListener('pointermove', e => { if (pan) { mBody.scrollLeft = pan.l - (e.clientX - pan.x); mBody.scrollTop = pan.t - (e.clientY - pan.y); } });
-['pointerup', 'pointercancel'].forEach(t => mBody.addEventListener(t, () => { pan = null; mBody.classList.remove('panning'); }));
-addEventListener('keydown', e => { if (!dlg.open) return; if (e.key === 'ArrowRight') openWork(cur + 1); if (e.key === 'ArrowLeft') openWork(cur - 1); });
+addEventListener('resize', () => { if (viewing) layoutView(false); });
+dlg.addEventListener('cancel', e => { if (viewing) { e.preventDefault(); leaveView(true); } });   // Esc goes back to the list first
+dlg.addEventListener('close', () => leaveView(false));
+addEventListener('keydown', e => { if (!dlg.open || viewing) return; if (e.key === 'ArrowRight') openWork(cur + 1); if (e.key === 'ArrowLeft') openWork(cur - 1); });
 
 /* ticker */
 const words = ['Game posters','Fan art','Thumbnails','Esports branding','Social graphics','Logos'];
