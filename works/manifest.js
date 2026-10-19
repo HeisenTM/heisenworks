@@ -23,7 +23,8 @@ window.WORKS_MANIFEST = {
   "gta6-12-raul-bautista.jpg",
   "gta6-13-leonida.jpg",
   "gta6-14-extended-look.jpg",
-  "gta6-15-rockstar.jpg"
+  "gta6-15-rockstar.jpg",
+  "hot_together_gtavi.jpg"
  ],
  "thumbnail-works": [
   "cover.jpg.jpg",
