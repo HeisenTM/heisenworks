@@ -10,7 +10,6 @@ window.WORKS_MANIFEST = {
  ],
  "gta6-fan-art": [
   "cover.jpg.jpg",
-  "fanart.jpeg",
   "gta6-01-ensemble.jpg",
   "gta6-03-jason-gold.jpg",
   "gta6-04-jason-duval.jpg",
