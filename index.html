@@ -95,6 +95,7 @@ h2{font:800 clamp(30px,4.4vw,52px)/1 var(--display);letter-spacing:-.045em}
 .hero-art{position:absolute;right:calc((100% - var(--w)) / 2 + 10px);top:50%;transform:translateY(-50%);width:min(34%,420px);aspect-ratio:860/940;z-index:1;pointer-events:none;overflow:hidden;filter:drop-shadow(0 0 56px rgba(160,90,255,.26))}
 .hero-art img{position:absolute;inset:-3%;width:106%;height:106%;object-fit:cover;filter:saturate(1.05) contrast(1.04);will-change:transform}
 @media(min-width:861px){.hero-row,.pen{max-width:calc(100% - min(28%,340px))}}
+@media(min-width:1101px){.pen{max-width:calc(100% - min(17vw,210px) - 170px)}}  /* stops the curve well before the countdown card */
 .hero::before,.hero::after{content:"";position:absolute;left:0;right:0;top:0;bottom:36%;z-index:0;pointer-events:none;opacity:0;transition:opacity .45s;background-size:24px 24px;-webkit-mask-composite:source-in;mask-composite:intersect}
 .hero::after{background-image:radial-gradient(circle,color-mix(in srgb,var(--cool) 70%,transparent) 1.1px,transparent 1.6px);
   -webkit-mask-image:radial-gradient(280px circle at var(--gx,-400px) var(--gy,-400px),#000 0%,transparent 70%),linear-gradient(180deg,#000 60%,transparent 100%);
@@ -180,6 +181,48 @@ dialog::backdrop{background:rgba(5,6,8,.78);backdrop-filter:blur(8px)}
 dialog.viewing{height:92vh}
 .mhint{color:var(--mute);font-size:13px;text-align:center}
 @media(max-width:700px){.mhint{display:none}}
+
+/* GTA VI countdown */
+.cd-wrap{position:absolute;z-index:3;right:calc((100% - var(--w)) / 2 + 10px);bottom:30px;width:min(34%,420px);display:flex;justify-content:center;pointer-events:none}
+.cd{position:relative;pointer-events:auto;width:264px;border-radius:20px;border:1px solid color-mix(in srgb,var(--text) 14%,transparent);
+  background:color-mix(in srgb,var(--panel) 90%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  transition:opacity .35s,transform .35s,width .35s,border-color .25s}
+.cd:hover,.cd.open{border-color:color-mix(in srgb,var(--text) 28%,transparent)}
+.cd.hide{opacity:0;transform:translateY(8px);pointer-events:none}
+.cd.off{display:none}
+.cd.open{width:300px}
+.cd-main{all:unset;box-sizing:border-box;position:relative;display:flex;align-items:center;gap:14px;width:100%;padding:14px 38px 14px 14px;cursor:pointer;border-radius:20px;color:var(--text)}
+.cd-main:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cd-x{position:absolute;top:7px;right:8px;z-index:1;width:24px;height:24px;border-radius:50%;border:0;background:none;color:var(--mute);font-size:17px;line-height:1;cursor:pointer}
+.cd-x:hover{color:var(--text);background:color-mix(in srgb,var(--text) 10%,transparent)}
+.cd-ring{position:relative;flex:none;width:66px;height:66px;display:grid;place-items:center;text-align:center}
+.cd-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.cd-ring .tr{fill:none;stroke:var(--line);stroke-width:4}
+.cd-ring .pr{fill:none;stroke:var(--accent);stroke-width:4;stroke-linecap:round;stroke-dasharray:163.4;stroke-dashoffset:163.4}
+.cd-num{position:relative;z-index:1}
+.cd-num b{display:block;font:800 24px/1 var(--display);letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.cd-num small{display:block;margin-top:-3px;font-size:10px;line-height:1;color:var(--mute)}
+.cd-txt{display:flex;flex-direction:column;gap:3px;min-width:0;text-align:left}
+.cd-live{display:flex;align-items:center;gap:7px;font:600 10.5px var(--body);font-style:normal;color:var(--mute);white-space:nowrap}
+.cd-live i{width:6px;height:6px;flex:none;border-radius:50%;background:#3ddc84;animation:pulse 2s infinite}
+.cd-txt strong{font:800 19px/1.1 var(--display);letter-spacing:-.04em;color:var(--text)}
+.cd-nz{font-size:12px;color:var(--mute)}
+.cd-chev{position:absolute;right:14px;bottom:12px;color:var(--mute);font-size:13px;transition:transform .3s}
+.cd.open .cd-chev{transform:rotate(180deg)}
+.cd-more{display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s cubic-bezier(.2,.8,.2,1)}
+.cd.open .cd-more{grid-template-rows:1fr}
+.cd-inner{overflow:hidden;min-height:0;padding:0 16px}
+.cd.open .cd-inner{padding-bottom:16px}
+.cd-clock{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cd-clock div{text-align:center;border:1px solid var(--line);border-radius:12px;padding:8px 0;background:color-mix(in srgb,var(--text) 4%,transparent)}
+.cd-clock b{display:block;font:800 18px/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.cd-clock small{display:block;margin-top:4px;font-size:10px;line-height:1;color:var(--mute)}
+.cd dl{margin:12px 0 0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:12px}
+.cd dt{color:var(--mute)}
+.cd dd{margin:0;text-align:right}
+.cd-roll{margin:12px 0 0;font-size:11.5px;line-height:1.5;color:var(--mute)}
+.cd-foot{margin-top:10px;font-size:10.5px;line-height:1.45;color:var(--mute);opacity:.85}
+@media(max-width:1100px){.cd-wrap{position:relative;right:auto;bottom:auto;width:var(--w);margin:24px auto 0;justify-content:flex-start}.cd,.cd.open{width:min(100%,360px)}}
 
 /* colour mood button */
 #pal{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:none;cursor:pointer;display:grid;place-items:center;transition:border-color .25s,transform .45s}
@@ -327,6 +370,33 @@ footer{padding:64px 0 28px}
         </a>
       </div>
       <div class="pen"><svg id="penSvg" viewBox="0 -30 1200 200" role="img" aria-label="A curve you can reshape by dragging its points"></svg><small>Drag the points to reshape the curve.</small></div>
+    </div>
+    <div class="cd-wrap">
+      <aside class="cd" id="cd" aria-label="GTA VI release countdown">
+        <button class="cd-x" id="cdX" type="button" aria-label="Hide the countdown for a week">×</button>
+        <button class="cd-main" id="cdMain" type="button" aria-expanded="false" aria-controls="cdMore">
+          <span class="cd-ring">
+            <svg viewBox="0 0 66 66" aria-hidden="true"><circle class="tr" cx="33" cy="33" r="26"/><circle class="pr" id="cdRing" cx="33" cy="33" r="26"/></svg>
+            <span class="cd-num"><b id="cdDays">–</b><small id="cdUnit">days</small></span>
+          </span>
+          <span class="cd-txt">
+            <em class="cd-live"><i></i><span id="cdLive">New Zealand unlocks first</span></em>
+            <strong>GTA VI</strong>
+            <span class="cd-nz" id="cdNz"></span>
+          </span>
+          <span class="cd-chev" aria-hidden="true">▾</span>
+        </button>
+        <div class="cd-more" id="cdMore">
+          <div class="cd-inner">
+            <div class="cd-clock" aria-hidden="true">
+              <div><b id="cdD">00</b><small>days</small></div><div><b id="cdH">00</b><small>hrs</small></div><div><b id="cdM">00</b><small>min</small></div><div><b id="cdS">00</b><small>sec</small></div>
+            </div>
+            <dl><dt>New Zealand</dt><dd id="cdNzFull"></dd><dt>Your time</dt><dd id="cdLocal"></dd></dl>
+            <p class="cd-roll">Australia, Japan, India, Europe and the Americas follow, with the last regions about 19 hours later.</p>
+            <p class="cd-foot">Unlock times come from store listings, not Rockstar, and can change.</p>
+          </div>
+        </div>
+      </aside>
     </div>
   </section>
 
@@ -844,6 +914,59 @@ if (fine) {
 /* pfp card: soft light follows the cursor */
 const toolCard = document.querySelector('.tool');
 toolCard.addEventListener('pointermove', e => { const r = toolCard.getBoundingClientRect(); toolCard.style.setProperty('--mx', (e.clientX - r.left) + 'px'); toolCard.style.setProperty('--my', (e.clientY - r.top) + 'px'); });
+
+/* GTA VI countdown: days until New Zealand unlocks first (tap the card for details) */
+const GTA_UNLOCK = Date.UTC(2026, 10, 18, 11, 0, 0);   // 12:00 AM NZDT on Nov 19, 2026 = 11:00 UTC on Nov 18. If the date moves, change only this line.
+(() => {
+  const cd = document.getElementById('cd'); if (!cd) return;
+  const $ = id => document.getElementById(id), DAY = 864e5, KEY = 'gta6cd', RING = 163.4;
+  const main = $('cdMain'), more = $('cdMore'); let open = false, lastDays = null;
+
+  // hidden for a week if dismissed; removed a week after launch
+  try { if (Date.now() - (+localStorage.getItem(KEY) || 0) < 7 * DAY) cd.classList.add('off'); } catch (e) {}
+  if (GTA_UNLOCK - Date.now() < -7 * DAY) { cd.classList.add('off'); return; }
+  $('cdX').onclick = () => { cd.classList.add('hide'); setTimeout(() => cd.classList.add('off'), 350); try { localStorage.setItem(KEY, Date.now()); } catch (e) {} };
+
+  // New Zealand time (and the visitor's own time) are worked out from the one timestamp
+  const nzFmt = new Intl.DateTimeFormat('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+  const q = Object.fromEntries(nzFmt.formatToParts(GTA_UNLOCK).map(x => [x.type, x.value]));
+  $('cdNz').textContent = `${q.hour}:${q.minute} ${q.dayPeriod.toUpperCase()} ${q.timeZoneName} · ${q.month} ${q.day}`;
+  $('cdNzFull').textContent = nzFmt.format(GTA_UNLOCK).replace(',', '');
+  $('cdLocal').textContent = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }).format(GTA_UNLOCK).replace(',', '');
+
+  const ring = $('cdRing'), numEl = $('cdDays');
+  const daysLeft = () => { const ms = GTA_UNLOCK - Date.now(); return ms <= 0 ? 0 : Math.floor(ms / DAY); };
+  const frac = d => d === 0 ? 1 : Math.min(1, Math.max(0, 1 - d / 100));          // the ring fills over the final 100 days
+  const paint = (label, f) => { numEl.textContent = label; ring.style.strokeDashoffset = RING * (1 - f); };
+  const unit = d => $('cdUnit').textContent = GTA_UNLOCK <= Date.now() ? 'out' : (d <= 1 ? 'day' : 'days');
+  function show(animate) {
+    const d = daysLeft(), out = GTA_UNLOCK <= Date.now(); lastDays = d; unit(d);
+    if (out) { $('cdLive').textContent = 'Unlocked · rolling out worldwide'; }
+    const label = n => out ? 'NOW' : (d === 0 ? '<1' : n);
+    if (!animate || calm) return paint(label(d), frac(d));
+    const t0 = performance.now();
+    (function step(t) { const k = Math.min(1, (t - t0) / 900), e = 1 - Math.pow(1 - k, 3); paint(label(Math.round(d * e)), frac(d) * e); if (k < 1) requestAnimationFrame(step); })(t0);
+  }
+  show(true);
+
+  // live clock only runs while the card is open
+  const pad = n => String(n).padStart(2, '0');
+  function tick() {
+    if (document.hidden) return;
+    const d = daysLeft(); if (d !== lastDays) show(false);
+    if (!open) return;
+    const ms = Math.max(0, GTA_UNLOCK - Date.now());
+    $('cdD').textContent = Math.floor(ms / DAY); $('cdH').textContent = pad(Math.floor(ms % DAY / 36e5));
+    $('cdM').textContent = pad(Math.floor(ms % 36e5 / 6e4)); $('cdS').textContent = pad(Math.floor(ms % 6e4 / 1e3));
+  }
+  setInterval(tick, 1000);
+
+  more.inert = true;
+  const setOpen = o => { open = o; cd.classList.toggle('open', o); main.setAttribute('aria-expanded', o); more.inert = !o; if (o) tick(); };
+  main.onclick = () => setOpen(!open);
+  document.addEventListener('click', e => { if (open && !cd.contains(e.target)) setOpen(false); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && open && !dlg.open) setOpen(false); });
+})();
 
 /* nav: highlight the section in view */
 const secs=['home','work','about','contact'].map(id=>document.getElementById(id));
