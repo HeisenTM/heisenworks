@@ -164,6 +164,24 @@ dialog::backdrop{background:rgba(5,6,8,.78);backdrop-filter:blur(8px)}
 .kofi:hover::after{opacity:1;transform:translateY(-9px)}
 @media(max-width:700px){.kofi span{display:none}.kofi{padding:8px 9px}}
 
+/* image gallery in the popup: one poster at a time, swipe / drag / arrows */
+.m-body.cmode{padding:14px 0 16px}
+.m-body.cmode .m-desc{padding:0 22px;margin-bottom:12px}
+.car{position:relative;padding:0 58px}
+.car-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;user-select:none;outline:none}
+.car-track::-webkit-scrollbar{display:none}
+.cslide{flex:0 0 100%;min-width:0;margin:0;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;scroll-snap-stop:always}
+.cslide img,.cslide video{display:block;max-width:calc(100% - 4px);max-height:calc(92vh - 240px);width:auto;height:auto;border-radius:14px;border:1px solid var(--line);cursor:zoom-in;-webkit-user-drag:none}
+.cslide video{cursor:auto;background:#000}
+.car-btn{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 88%,transparent);color:var(--text);font-size:24px;line-height:1;cursor:pointer;transition:border-color .2s,opacity .2s}
+.car-btn.prev{left:8px}.car-btn.next{right:8px}
+.car-btn:hover:not(:disabled){border-color:var(--accent)}
+.car-btn:disabled{opacity:.3;cursor:default}
+.car-dots{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-top:14px;padding:0 22px}
+.car-dots button{width:8px;height:8px;padding:0;border:0;border-radius:99px;background:color-mix(in srgb,var(--text) 25%,transparent);cursor:pointer;transition:width .25s,background .25s}
+.car-dots button.on{width:22px;background:var(--accent)}
+@media(max-width:700px){.car{padding:0}.car-btn{display:none}.cslide img,.cslide video{max-height:calc(92vh - 230px)}}
+
 /* popup viewer (zoom + pan one poster at a time) */
 [hidden]{display:none!important}
 .mback{margin-left:auto}
@@ -508,7 +526,7 @@ footer{padding:64px 0 28px}
   <div class="m-foot">
     <button class="pill" id="mPrev">Previous</button>
     <a class="pill" id="mLink" target="_blank" rel="noopener" hidden>View project</a>
-    <span class="mhint" id="mHint">Click a poster to zoom in</span>
+    <span class="mhint" id="mHint">Swipe or use ← → · click to zoom</span>
     <button class="pill" id="mNext">Next</button>
   </div>
 </dialog>
@@ -666,10 +684,15 @@ function openWork(i) {
   curImgs = items.filter(s => !isVid(s));
   document.getElementById('mTitle').textContent = w.title;
   document.getElementById('mCat').textContent = w.cat;
-  mBody.innerHTML = (w.desc ? `<p class="m-desc">${w.desc}</p>` : '') +
-    (items.length
-      ? items.map(s => `<figure class="m-fig">${isVid(s) ? `<video src="${s}" controls playsinline></video>` : `<img src="${s}" alt="${w.title}" loading="lazy">`}</figure>`).join('')
-      : `<div class="m-fig ph"><span>Coming soon</span></div>`);
+  curItems = items;
+  const many = items.length > 1;
+  const slidesHtml = items.map(s => `<figure class="cslide">${isVid(s) ? `<video src="${s}" controls playsinline></video>` : `<img src="${s}" alt="${w.title}" loading="lazy" decoding="async" draggable="false">`}</figure>`).join('');
+  mBody.classList.toggle('cmode', items.length > 0);
+  mBody.innerHTML = (w.desc ? `<p class="m-desc">${w.desc}</p>` : '') + (items.length
+    ? `<div class="car"><button class="car-btn prev" type="button" aria-label="Previous image" ${many ? '' : 'hidden'}>‹</button><div class="car-track" id="carTrack" tabindex="0" aria-label="Gallery">${slidesHtml}</div><button class="car-btn next" type="button" aria-label="Next image" ${many ? '' : 'hidden'}>›</button></div>`
+      + (many && items.length <= 24 ? `<div class="car-dots">${items.map((_, k) => `<button type="button" data-i="${k}" aria-label="Go to image ${k + 1}"></button>`).join('')}</div>` : '')
+    : `<div class="m-fig ph"><span>Coming soon</span></div>`);
+  navLabels(false); initCarousel();
   mBody.scrollTop = 0;
   const l = document.getElementById('mLink'); l.hidden = !w.link; l.href = w.link || '#';
   if (!dlg.open) { dlg.showModal(); document.documentElement.style.overflow = 'hidden'; }
@@ -681,11 +704,11 @@ dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 dlg.addEventListener('close', () => document.documentElement.style.overflow = '');
 
 /* poster viewer: click a poster to open it, scroll / pinch / + - to zoom, drag to move */
-let viewing = false, curImgs = [], animT;
+let viewing = false, curImgs = [], curItems = [], animT;
 const V = { s: 1, fit: 1, tx: 0, ty: 0, w: 1, h: 1, vw: 1, vh: 1, idx: 0 };
 const mView = document.getElementById('mView'), vImg = document.getElementById('vImg');
 const zIn = document.getElementById('zIn'), zOut = document.getElementById('zOut'), zLvl = document.getElementById('zLvl');
-const mHint = document.getElementById('mHint'), LIST_HINT = 'Click a poster to zoom in';
+const mHint = document.getElementById('mHint'), LIST_HINT = 'Swipe or use ← → · click to zoom';
 
 function clampView() {
   const iw = V.w * V.s, ih = V.h * V.s;
@@ -726,7 +749,7 @@ function enterView(i) {
   mBody.hidden = true; mView.hidden = false; dlg.classList.add('viewing');
   document.getElementById('mZoom').hidden = false; document.getElementById('mBack').hidden = false;
   document.getElementById('mLink').hidden = true;
-  mHint.textContent = 'Scroll to zoom · drag to move';
+  mHint.textContent = 'Scroll to zoom · drag to move'; navLabels(true);
   document.getElementById('mCat').textContent = (i + 1) + ' / ' + curImgs.length;
   loadView();
 }
@@ -741,10 +764,64 @@ function leaveView(restore) {
   document.getElementById('mZoom').hidden = true; document.getElementById('mBack').hidden = true;
   const w = WORKS[cur]; document.getElementById('mLink').hidden = !w.link;
   document.getElementById('mCat').textContent = w.cat; mHint.textContent = LIST_HINT;
-  if (restore) { const el = mBody.querySelectorAll('.m-fig img')[V.idx]; if (el) el.scrollIntoView({ block: 'center' }); }
+  navLabels(false);
+  if (restore) { const k = curItems.indexOf(curImgs[V.idx]); if (k >= 0) carGo(k, false); }
+}
+/* gallery: swipe, mouse drag, arrows, dots, keyboard and wheel */
+let carIdx = 0, carBusy = false, carBusyT, carDrag = false;
+function navLabels(imgMode) {
+  document.getElementById('mPrev').textContent = imgMode ? 'Previous' : '← Previous box';
+  document.getElementById('mNext').textContent = imgMode ? 'Next' : 'Next box →';
+}
+function carUpdate() {
+  const n = mBody.querySelectorAll('.cslide').length; if (!n) return;
+  mBody.querySelectorAll('.car-dots button').forEach((b, k) => b.classList.toggle('on', k === carIdx));
+  const pv = mBody.querySelector('.car-btn.prev'), nx = mBody.querySelector('.car-btn.next');
+  if (pv && nx) { pv.disabled = carIdx === 0; nx.disabled = carIdx === n - 1; }
+  if (!viewing && n > 1) document.getElementById('mCat').textContent = WORKS[cur].cat + ' · ' + (carIdx + 1) + ' / ' + n;
+}
+function carGo(i, smooth = true) {
+  const t = document.getElementById('carTrack'); if (!t) return;
+  carIdx = Math.max(0, Math.min(t.children.length - 1, i));
+  carBusy = true; clearTimeout(carBusyT); carBusyT = setTimeout(() => carBusy = false, smooth ? 480 : 60);
+  t.scrollTo({ left: carIdx * t.clientWidth, behavior: smooth ? 'smooth' : 'instant' });
+  carUpdate();
+}
+function initCarousel() {
+  carIdx = 0; const t = document.getElementById('carTrack'); if (!t) return;
+  let raf = 0, drag = null, wheelLock = false;
+  t.addEventListener('scroll', () => {                               // keeps dots in step while swiping
+    if (carBusy || raf) return;
+    raf = requestAnimationFrame(() => { raf = 0; const i = Math.round(t.scrollLeft / Math.max(1, t.clientWidth)); if (i !== carIdx) { carIdx = i; carUpdate(); } });
+  }, { passive: true });
+  t.addEventListener('pointerdown', e => {                           // mouse drag (touch screens use their own swipe)
+    if (e.pointerType === 'touch' || e.button !== 0 || e.target.closest('video')) return;
+    drag = { x: e.clientX, l: t.scrollLeft, i: carIdx, moved: false };
+  });
+  const endDrag = e => {
+    if (!drag) return; const d = drag, dx = e.clientX - d.x; drag = null; t.style.scrollSnapType = '';
+    carDrag = d.moved; setTimeout(() => carDrag = false, 0);
+    if (d.moved) carGo(Math.abs(dx) > t.clientWidth * .15 ? d.i + (dx < 0 ? 1 : -1) : d.i);
+  };
+  t.addEventListener('pointermove', e => {
+    if (!drag) return;
+    if (e.buttons === 0) return endDrag(e);
+    const dx = e.clientX - drag.x;
+    if (!drag.moved && Math.abs(dx) > 5) { drag.moved = true; t.setPointerCapture(e.pointerId); t.style.scrollSnapType = 'none'; }
+    if (drag.moved) t.scrollLeft = drag.l - dx;
+  });
+  t.addEventListener('pointerup', endDrag); t.addEventListener('pointercancel', endDrag);
+  t.addEventListener('wheel', e => {                                 // wheel / trackpad: one image per flick
+    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY; if (Math.abs(d) < 8) return;
+    e.preventDefault(); if (wheelLock) return; wheelLock = true; carGo(carIdx + (d > 0 ? 1 : -1)); setTimeout(() => wheelLock = false, 420);
+  }, { passive: false });
+  carUpdate();
 }
 mBody.addEventListener('click', e => {
-  const img = e.target.closest('.m-fig img'); if (!img) return;
+  if (carDrag) return;
+  const b = e.target.closest('.car-btn'); if (b) { carGo(carIdx + (b.classList.contains('next') ? 1 : -1)); return; }
+  const dt = e.target.closest('.car-dots button'); if (dt) { carGo(+dt.dataset.i); return; }
+  const img = e.target.closest('.cslide img'); if (!img) return;
   const i = curImgs.indexOf(img.getAttribute('src')); if (i >= 0) enterView(i);
 });
 document.getElementById('mBack').onclick = () => leaveView(true);
@@ -792,7 +869,7 @@ addEventListener('keydown', e => {
 addEventListener('resize', () => { if (viewing) layoutView(false); });
 dlg.addEventListener('cancel', e => { if (viewing) { e.preventDefault(); leaveView(true); } });   // Esc goes back to the list first
 dlg.addEventListener('close', () => leaveView(false));
-addEventListener('keydown', e => { if (!dlg.open || viewing) return; if (e.key === 'ArrowRight') openWork(cur + 1); if (e.key === 'ArrowLeft') openWork(cur - 1); });
+addEventListener('keydown', e => { if (!dlg.open || viewing) return; if (e.key === 'ArrowRight') carGo(carIdx + 1); if (e.key === 'ArrowLeft') carGo(carIdx - 1); });
 
 /* ticker */
 const words = ['Game posters','Fan art','Thumbnails','Esports branding','Social graphics','Logos'];
