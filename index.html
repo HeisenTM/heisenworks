@@ -165,13 +165,14 @@ dialog::backdrop{background:rgba(5,6,8,.78);backdrop-filter:blur(8px)}
 @media(max-width:700px){.kofi span{display:none}.kofi{padding:8px 9px}}
 
 /* image gallery in the popup: one poster at a time, swipe / drag / arrows */
-.m-body.cmode{padding:14px 0 16px}
+.m-body.cmode{padding:14px 0 16px;scrollbar-width:none}
+.m-body.cmode::-webkit-scrollbar{display:none}
 .m-body.cmode .m-desc{padding:0 22px;margin-bottom:12px}
 .car{position:relative;padding:0 58px}
 .car-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;user-select:none;outline:none}
 .car-track::-webkit-scrollbar{display:none}
 .cslide{flex:0 0 100%;min-width:0;margin:0;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;scroll-snap-stop:always}
-.cslide img,.cslide video{display:block;max-width:calc(100% - 4px);max-height:calc(92vh - 240px);width:auto;height:auto;border-radius:14px;border:1px solid var(--line);cursor:zoom-in;-webkit-user-drag:none}
+.cslide img,.cslide video{display:block;max-width:calc(100% - 4px);max-height:var(--imgmax,calc(92vh - 260px));width:auto;height:auto;border-radius:14px;border:1px solid var(--line);cursor:zoom-in;-webkit-user-drag:none}
 .cslide video{cursor:auto;background:#000}
 .car-btn{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 88%,transparent);color:var(--text);font-size:24px;line-height:1;cursor:pointer;transition:border-color .2s,opacity .2s}
 .car-btn.prev{left:8px}.car-btn.next{right:8px}
@@ -180,7 +181,7 @@ dialog::backdrop{background:rgba(5,6,8,.78);backdrop-filter:blur(8px)}
 .car-dots{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-top:14px;padding:0 22px}
 .car-dots button{width:8px;height:8px;padding:0;border:0;border-radius:99px;background:color-mix(in srgb,var(--text) 25%,transparent);cursor:pointer;transition:width .25s,background .25s}
 .car-dots button.on{width:22px;background:var(--accent)}
-@media(max-width:700px){.car{padding:0}.car-btn{display:none}.cslide img,.cslide video{max-height:calc(92vh - 230px)}}
+@media(max-width:700px){.car{padding:0}.car-btn{display:none}}
 
 /* popup viewer (zoom + pan one poster at a time) */
 [hidden]{display:none!important}
@@ -543,7 +544,7 @@ footer{padding:64px 0 28px}
    ratio = width / height, only used while a folder is still empty.
    ============================================================ */
 const FOLDERS = [
-  { folder:'gta6-fan-art',    title:'GTA 6 Fan Art',   cat:'Poster',    ratio:.8,   desc:'A collection of GTA 6 fan posters: character posters, key art and edits. Scroll down to see them all.' },
+  { folder:'gta6-fan-art',    title:'GTA 6 Fan Art',   cat:'Poster',    ratio:.8,   desc:'A collection of GTA 6 fan posters: character posters, key art and edits.' },
   { folder:'thumbnail-works', title:'Thumbnail Works', cat:'Thumbnail', ratio:1.78, desc:'Thumbnails designed for gaming videos.' },
   { folder:'concepts',        title:'Concepts',        cat:'Concept',   ratio:1.78, desc:'Experiments, ideas and work in progress.' },
 ];
@@ -696,6 +697,7 @@ function openWork(i) {
   mBody.scrollTop = 0;
   const l = document.getElementById('mLink'); l.hidden = !w.link; l.href = w.link || '#';
   if (!dlg.open) { dlg.showModal(); document.documentElement.style.overflow = 'hidden'; }
+  fitGallery();
 }
 document.getElementById('mClose').onclick = () => dlg.close();
 document.getElementById('mPrev').onclick = () => viewing ? stepView(-1) : openWork(cur - 1);
@@ -769,6 +771,13 @@ function leaveView(restore) {
 }
 /* gallery: swipe, mouse drag, arrows, dots, keyboard and wheel */
 let carIdx = 0, carBusy = false, carBusyT, carDrag = false;
+function fitGallery() {                                              // sizes the poster to whatever room is left in the popup
+  if (!dlg.open || viewing || !mBody.classList.contains('cmode')) return;
+  const head = dlg.querySelector('.m-head'), foot = dlg.querySelector('.m-foot');
+  const desc = mBody.querySelector('.m-desc'), dots = mBody.querySelector('.car-dots');
+  const used = head.offsetHeight + foot.offsetHeight + (desc ? desc.offsetHeight + 12 : 0) + (dots ? dots.offsetHeight + 14 : 0) + 30 + 14;
+  mBody.style.setProperty('--imgmax', Math.max(160, Math.floor(innerHeight * .92 - used)) + 'px');
+}
 function navLabels(imgMode) {
   document.getElementById('mPrev').textContent = imgMode ? 'Previous' : '← Previous box';
   document.getElementById('mNext').textContent = imgMode ? 'Next' : 'Next box →';
@@ -866,7 +875,8 @@ addEventListener('keydown', e => {
   if (e.key === '+' || e.key === '=') zoomCenter(1.5); else if (e.key === '-') zoomCenter(1 / 1.5); else if (e.key === '0') zoomAt(V.vw / 2, V.vh / 2, V.fit, true);
   else if (e.key === 'ArrowRight') stepView(1); else if (e.key === 'ArrowLeft') stepView(-1);
 });
-addEventListener('resize', () => { if (viewing) layoutView(false); });
+addEventListener('resize', () => { if (viewing) layoutView(false); else fitGallery(); });
+if (document.fonts) document.fonts.ready.then(fitGallery);
 dlg.addEventListener('cancel', e => { if (viewing) { e.preventDefault(); leaveView(true); } });   // Esc goes back to the list first
 dlg.addEventListener('close', () => leaveView(false));
 addEventListener('keydown', e => { if (!dlg.open || viewing) return; if (e.key === 'ArrowRight') carGo(carIdx + 1); if (e.key === 'ArrowLeft') carGo(carIdx - 1); });
