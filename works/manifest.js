@@ -29,8 +29,11 @@ window.WORKS_MANIFEST = {
  ],
  "thumbnail-works": [
   "cover.jpg.jpg",
+  "DocumentryThumbnail.jpg",
   "rageengine_thumbnail.jpg",
-  "rockstargames_gridart.jpg"
+  "rockstargames_gridart.jpg",
+  "RSGNEWNEW.jpg",
+  "SAMDANGTA611.jpg"
  ],
  "video-edits": [
   {
